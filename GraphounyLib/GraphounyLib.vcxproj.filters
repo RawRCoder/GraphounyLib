@@ -114,6 +114,9 @@
     <ClInclude Include="utils\gru_lineparse.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Framework\grfw_basicapplication.cpp">
@@ -167,5 +170,15 @@
     <ClCompile Include="utils\gru_strutils.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Файлы ресурсов</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\3Party\FatCowIcons\FatCow_Icons32x32_Ico\video_mode.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
   </ItemGroup>
 </Project>

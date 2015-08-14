@@ -5,6 +5,7 @@
 #include "grfwu_logging.h"
 #include "grfwu_exception.h"
 #include <ctime>
+#include "..\resource.h"
 
 GRAPHOUNY_NAMESPACE_FRAMEWORK{
 	BasicApplication::~BasicApplication()
@@ -71,6 +72,34 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 		LogLn(L"[DBG]: Engine closed!");
 	}
 
+	void BasicApplication::SetIcon(std::wstring path)
+	{
+		auto hIcon = LoadImage(m_hWindowsInstance, path.data(), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		if (hIcon) {
+			//Change both icons to the same icon handle.
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+
+			//This will ensure that the application icon gets changed too.
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+		}
+	}
+
+	void BasicApplication::SetIcon(i32 IDI)
+	{
+		auto hIcon = LoadIcon(m_hWindowsInstance, MAKEINTRESOURCE(IDI));
+		if (hIcon) {
+			//Change both icons to the same icon handle.
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+
+			//This will ensure that the application icon gets changed too.
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+		}
+	}
+
 	void BasicApplication::Init_PreInit()
 	{
 		// Init content manager
@@ -85,6 +114,9 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 
 		// Set up globals
 		g_pGlobals->RegisterApp(this, m_pReporter);
+
+		// Load all SMC files (initialize filesystem)
+		m_pContentManager->Init();
 	}
 
 	void BasicApplication::Init_LoadConfig(std::wstring filename)
@@ -107,7 +139,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 		wndClass.lpfnWndProc = &WindowProcessor;
 		wndClass.hInstance = hInst;
 		wndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-		//wndClass.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_ICON1));
+		wndClass.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_ICON1));
 		wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 		wndClass.lpszMenuName = nullptr;
 		wndClass.lpszClassName = WND_CLASSNAME;

@@ -107,6 +107,7 @@
     <ClInclude Include="gr_vector3.h" />
     <ClInclude Include="gr_vector4.h" />
     <ClInclude Include="gr_version.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Utils\gru_array.h" />
     <ClInclude Include="Utils\gru_dictionary.h" />
     <ClInclude Include="Utils\gru_filesystem.h" />
@@ -134,6 +135,12 @@
     <ClCompile Include="Utils\gru_filesystem.cpp" />
     <ClCompile Include="utils\gru_lineparse.cpp" />
     <ClCompile Include="utils\gru_strutils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\3Party\FatCowIcons\FatCow_Icons32x32_Ico\video_mode.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

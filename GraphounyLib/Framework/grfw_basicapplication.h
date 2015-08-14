@@ -36,6 +36,9 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		inline f32 GetWidthF() const { return (f32)(m_pWindowClientRect->right - m_pWindowClientRect->left); }
 		inline f32 GetHeightF() const { return (f32)(m_pWindowClientRect->bottom - m_pWindowClientRect->top); }
 
+		void SetIcon(std::wstring path);
+		void SetIcon(i32 IDI);
+
 		KeyValueManager m_Config;
 		rgba_s m_clrBackGround = RGBA_GREEN;
 	protected:
