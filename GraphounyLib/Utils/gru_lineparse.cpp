@@ -16,13 +16,13 @@ lineparse_s::lineparse_s(wstring s)
 		c = s[i];
 		if (c == '\\')
 		{
-			if (pc == c)
+			if (!inEscape)
+				inEscape = true;
+			else
 			{
 				inEscape = false;
 				buffer += c;
-				c = '\0';
 			}
-			inEscape = true;
 			continue;
 		}
 		if (inEscape)
