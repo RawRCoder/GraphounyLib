@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include <d3d12.h>
 #include <wrl/client.h>
-#include <dxgi1_3.h>
+#include <..\shared\dxgi1_4.h>
 #include "grfw_config.h"
 #include "grfwu_input.h"
 #include "..\gr_rgba.h"
@@ -99,8 +99,8 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		HINSTANCE m_hWindowsInstance = nullptr;	
 
 		ID3D12Device* m_pDevice;
-		Microsoft::WRL::ComPtr<IDXGIFactory2> m_pDxgiFactory;
-		Microsoft::WRL::ComPtr<IDXGISwapChain1> m_pSwapChain;
+		Microsoft::WRL::ComPtr<IDXGIFactory4> m_pDxgiFactory;
+		Microsoft::WRL::ComPtr<IDXGISwapChain3> m_pSwapChain;
 		Microsoft::WRL::ComPtr<ID3D12Resource> m_pD3DBuffer[2];
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_pCmdAlloc;
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_pCmdQueue;

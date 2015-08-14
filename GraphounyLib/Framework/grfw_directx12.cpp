@@ -1,3 +1,4 @@
+#include <dxgi.h>
 #include "grfw_shared.h"
 #include "grfw_basicapplication.h"
 #include <stdexcept>
@@ -73,22 +74,31 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 			L"Failed to create command allocator");
 
 		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 		ThrowOnFailed(m_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(m_pCmdQueue.ReleaseAndGetAddressOf()))
 			, L"Failed to create command queue");
 
-		DXGI_SWAP_CHAIN_DESC1 scDesc = {};
-		scDesc.Width = GetWidth();
-		scDesc.Height = GetHeight();
-		scDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		scDesc.SampleDesc.Count = 1;
-		scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		scDesc.BufferCount = BUFFER_COUNT;
-		scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-		ThrowOnFailed(
-			m_pDxgiFactory->CreateSwapChainForHwnd(
-				m_pCmdQueue.Get(), m_hWindowHandle, &scDesc, nullptr, nullptr, m_pSwapChain.ReleaseAndGetAddressOf())
-			, L"Failed to create swap chain for window");
+		// Describe and create the swap chain.
+		DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+		swapChainDesc.BufferCount = BUFFER_COUNT;
+		swapChainDesc.BufferDesc.Width = GetWidth();
+		swapChainDesc.BufferDesc.Height = GetHeight();
+		swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		swapChainDesc.OutputWindow = m_hWindowHandle;
+		swapChainDesc.SampleDesc.Count = 1;
+		swapChainDesc.Windowed = TRUE;
+
+		Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain;
+		ThrowOnFailed(m_pDxgiFactory->CreateSwapChain(
+			m_pCmdQueue.Get(),		// Swap chain needs the queue so that it can force a flush on it.
+			&swapChainDesc,
+			&swapChain
+			), L"Failed to create spaw chain");
+
+		ThrowOnFailed(swapChain.As(&m_pSwapChain), L"Failed to cast swap chain");
 
 		ThrowOnFailed(
 			m_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.ReleaseAndGetAddressOf()))
@@ -140,6 +150,8 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 			ThrowOnFailed(m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature)), 
 				L"Failed to create root signature");
 		}
+
+		m_iFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
 	}
 	ID3D12GraphicsCommandList* BasicApplication::GetCommandList() const
 	{
@@ -208,9 +220,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		m_pCurrentBuffer = m_pD3DBuffer[(m_iFrameIndex) % BUFFER_COUNT].Get();
 
 		// Barrier Present -> RenderTarget
-		setResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-		
+		setResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);		
 	}
 
 	void BasicApplication::Render_After()
@@ -237,7 +247,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 			throw GrBasicException(L"Failed WaitForSingleObject().");
 
 		m_pCurrentPipeLine->Reset();
-		++m_iFrameIndex;
+		m_iFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
 	}
 
 } GRAPHOUNY_NAMESPACE_END

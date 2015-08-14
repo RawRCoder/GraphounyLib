@@ -1,8 +1,4 @@
 #include "DemoApplication.h"
-#include <Utils/gru_dictionary.h>
-#include <Framework/grfwu_exception.h>
-#include <Framework/grfwu_logging.h>
-#include <Utils/gru_filesystem.h>
 #include <d3dx12.h>
 #include <Framework/Render/grfwr_blob.h>
 #include <Framework/grfw_content.h>
@@ -89,13 +85,9 @@ void DemoApplication::OnChar(wchar_t c)
 
 void DemoApplication::Render(f32 delta)
 {
-	static f32 h = 0.0f;
-	h += delta*2;
-	if (h >= 1) h = 0.0f;
-	m_clrBackGround.r = (f32)Saturate(0, std::abs(h * 6 - 3.0) - 1.0, 1);
-	m_clrBackGround.g = (f32)Saturate(0, 2.0f - std::abs(h * 6 - 2.0), 1);
-	m_clrBackGround.b = (f32)Saturate(0, 2.0f - std::abs(h * 6 - 4.0), 1);
-	Clear();
+	m_clrBackGround.r = 0.1f;
+	m_clrBackGround.g = 0.2f;
+	m_clrBackGround.b = 0.3f;
 
 	// Set necessary state.
 	auto cmd = GetCommandList();
@@ -103,6 +95,7 @@ void DemoApplication::Render(f32 delta)
 	cmd->RSSetViewports(1, &GetViewPort());
 	cmd->RSSetScissorRects(1, &GetScissorRect());
 	cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	Clear();
 	
 	// Draw stuff
 	m_bufTriangle.Draw(cmd);

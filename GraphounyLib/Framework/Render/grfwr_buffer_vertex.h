@@ -43,7 +43,7 @@ public:
 		Graphouny::Framework::ThrowOnFailed(
 			m_pVBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffer)),
 			L"Failed to map vertex buffer");
-		memcpy(pBuffer, data_v, sizeof(data_v));
+		memcpy(pBuffer, data_v, data_v_size);
 		m_pVBuffer->Unmap(0, nullptr);
 
 		// Initialize the vertex buffer view.
@@ -56,7 +56,7 @@ public:
 		Graphouny::Framework::ThrowOnFailed(
 			m_pIBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffer)),
 			L"Failed to map index buffer");
-		memcpy(pBuffer, data_i, sizeof(data_i));
+		memcpy(pBuffer, data_i, data_i_size);
 		m_pIBuffer->Unmap(0, nullptr);
 
 		// Initialize the index buffer view.
@@ -74,8 +74,8 @@ public:
 	{
 		m_arrVerticies.Clear();
 		m_arrIndicies.Clear();
-		m_pVBuffer->Release();
-		m_pIBuffer->Release();
+		m_pVBuffer.ReleaseAndGetAddressOf();
+		m_pIBuffer.ReleaseAndGetAddressOf();
 	}
 private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_pVBuffer;
