@@ -87,9 +87,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Formats\SMC\grf_smc.h" />
     <ClInclude Include="formats\smc\grf_smc_system.h" />
     <ClInclude Include="Framework\grfwu_exception.h" />
