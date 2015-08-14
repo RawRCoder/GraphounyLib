@@ -114,21 +114,22 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 			m_pD3DBuffer[i]->SetName(L"SwapChain_Buffer");
 		}
 
-		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		desc.NumDescriptors = 10;
-		desc.NodeMask = 0;
+		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+		rtvHeapDesc.NumDescriptors = BUFFER_COUNT;
+		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		ThrowOnFailed(
-			m_pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_pDescHeapRtv.ReleaseAndGetAddressOf()))
+			m_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pDescHeapRtv.ReleaseAndGetAddressOf()))
 			, L"Failed to create descriptor heap");
-		
+		m_iRTVDescSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-		auto rtvStep = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart());
 		for (auto i = 0u; i < BUFFER_COUNT; i++)
 		{
-			auto d = m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart();
-			d.ptr += i * rtvStep;
-			m_pDevice->CreateRenderTargetView(m_pD3DBuffer[i].Get(), nullptr, d);
+			ThrowOnFailed(m_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&m_pD3DBuffer[i])), L"Failed to get buffer");
+			m_pDevice->CreateRenderTargetView(m_pD3DBuffer[i].Get(), nullptr, rtvHandle);
+			rtvHandle.Offset(1, m_iRTVDescSize);
 		}
 
 		m_viewport.Width = GetWidthF();
@@ -162,7 +163,8 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 
 	void BasicApplication::Clear()
 	{
-		GetCommandList()->ClearRenderTargetView(m_descHandleRtv, rgba_s::to_floats(m_clrBackGround), 0, nullptr);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart(), m_iFrameIndex % BUFFER_COUNT, m_iRTVDescSize);
+		GetCommandList()->ClearRenderTargetView(rtvHandle, rgba_s::to_floats(m_clrBackGround), 0, nullptr);
 	}
 
 	void BasicApplication::CreatePipeLine(const std::wstring id, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, D3D12_COMMAND_LIST_TYPE tp)
@@ -195,7 +197,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		return true;
 	}
 
-	void setResourceBarrier(ID3D12GraphicsCommandList* commandList,
+	void BasicApplication::SetResourceBarrier(ID3D12GraphicsCommandList* commandList,
 		ID3D12Resource* res,
 		D3D12_RESOURCE_STATES before,
 		D3D12_RESOURCE_STATES after)
@@ -212,21 +214,18 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 
 	void BasicApplication::Render_Before()
 	{
-		// Get current RTV descriptor
-		auto descHandleRtvStep = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		m_descHandleRtv = m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart();
-		m_descHandleRtv.ptr += ((m_iFrameIndex) % BUFFER_COUNT) * descHandleRtvStep;
-		// Get current swap chain
-		m_pCurrentBuffer = m_pD3DBuffer[(m_iFrameIndex) % BUFFER_COUNT].Get();
-
+		m_pCurrentPipeLine->Reset();
+		m_pCurrentBuffer = m_pD3DBuffer[m_iFrameIndex % BUFFER_COUNT].Get();
 		// Barrier Present -> RenderTarget
-		setResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);		
+		SetResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart(), m_iFrameIndex % BUFFER_COUNT, m_iRTVDescSize);
+		GetCommandList()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 	}
 
 	void BasicApplication::Render_After()
 	{
 		// Barrier RenderTarget -> Present
-		setResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		SetResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 		// Exec
 		m_pCurrentPipeLine->Close();
@@ -237,17 +236,14 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		ThrowOnFailed(m_pSwapChain->Present(1, 0), L"Failed to present a swap chain");
 
 		// Set queue flushed event
-		ThrowOnFailed(m_pFence->SetEventOnCompletion(m_iFrameIndex, m_hFenceEvent), L"");
-
-		// Wait for queue flushed
-		// This code would occur CPU stall!
 		ThrowOnFailed(m_pCmdQueue->Signal(m_pFence.Get(), m_iFrameIndex), L"");
-		DWORD wait = WaitForSingleObject(m_hFenceEvent, INFINITE);
-		if (wait != WAIT_OBJECT_0)
-			throw GrBasicException(L"Failed WaitForSingleObject().");
-
-		m_pCurrentPipeLine->Reset();
-		m_iFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
+		// Wait until the previous frame is finished.
+		if (m_pFence->GetCompletedValue() < m_iFrameIndex)
+		{
+			ThrowOnFailed(m_pFence->SetEventOnCompletion(m_iFrameIndex, m_hFenceEvent), L"Faile to wait");
+			WaitForSingleObject(m_hFenceEvent, INFINITE);
+		}
+		m_iFrameIndex++;
 	}
 
 } GRAPHOUNY_NAMESPACE_END

@@ -9,6 +9,7 @@
 #include "grfw_config.h"
 #include "grfwu_input.h"
 #include "..\gr_rgba.h"
+#include "../d3dx12.h"
 
 class PipeLine;
 GRAPHOUNY_NAMESPACE_FRAMEWORK {
@@ -79,6 +80,10 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		void SetPipeLine(PipeLine* pl);
 		bool SetPipeLine(const std::wstring id);
 		PipeLine* GetPipeLine(std::wstring id);
+		void SetResourceBarrier(ID3D12GraphicsCommandList* commandList,
+			ID3D12Resource* res,
+			D3D12_RESOURCE_STATES before,
+			D3D12_RESOURCE_STATES after);
 
 		Dictionary<std::wstring, PipeLine*> m_dictPipeLines{ Comparator<std::wstring> };
 	private:
@@ -122,9 +127,10 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		POINT m_pntActualBufferSize;
 		mouse_data_s m_MouseData;
 		u32 m_iFrameIndex = 0;
+		u32 m_iRTVDescSize;
 
 		ID3D12Resource* m_pCurrentBuffer;
-		D3D12_CPU_DESCRIPTOR_HANDLE m_descHandleRtv;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE m_rtvHandle;
 	};
 } GRAPHOUNY_NAMESPACE_END
 

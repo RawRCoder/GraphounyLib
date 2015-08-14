@@ -20,4 +20,3 @@ private:
 	std::wstring m_wsText = L"";
 	VertexBuffer<vertex_colored_s> m_bufTriangle;
 };
-

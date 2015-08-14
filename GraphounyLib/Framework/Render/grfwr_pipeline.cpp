@@ -13,6 +13,7 @@ void PipeLine::Initialize(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& descGr, D3D1
 	ThrowOnFailed(
 		m_pDevice->CreateCommandList(0, tp, m_pAllocator.Get(), m_pState.Get(), IID_PPV_ARGS(&m_pGrCommandList)),
 		L"Failed to create command list");
+	Close();
 }
 
 void PipeLine::Reset()
