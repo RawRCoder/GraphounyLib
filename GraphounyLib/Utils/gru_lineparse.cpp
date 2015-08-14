@@ -10,7 +10,7 @@ lineparse_s::lineparse_s(wstring s)
 	wchar_t pc;
 	auto readingCommand = true;
 	wstring buffer = L"";
-	for (auto i = 0; i < s.length(); ++i)
+	for (u32 i = 0; i < s.length(); ++i)
 	{
 		pc = c;
 		c = s[i];
