@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Файлы исходного кода">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Заголовочные файлы">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{f461e5ba-4838-4b73-8951-4ce15056636d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{39b06556-cd1c-4be4-b6ab-ed8a02bdaecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework\Utils">
+      <UniqueIdentifier>{4619af0f-b7c7-425d-b1a6-429d0b4e6e55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Formats">
+      <UniqueIdentifier>{01a7e6bf-7425-48ae-971c-7b41198fc8e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Formats\SMC">
+      <UniqueIdentifier>{9eba15cb-5c71-43ac-a4cb-5be9711f4c9e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Framework\grfw_basicapplication.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_shared.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_version.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfw_keys.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfwu_reporting.h">
+      <Filter>Framework\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\gru_windows.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfwu_logging.h">
+      <Filter>Framework\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\gru_uniout.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfw_content.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfw_shared.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\gru_array.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\gru_dictionary.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\gru_filesystem.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfwu_exception.h">
+      <Filter>Framework\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\gru_printable.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfw_config.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_vector2.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_vector3.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_vector4.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_vector.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\grfwu_input.h">
+      <Filter>Framework\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_rgba.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_128.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="Formats\SMC\grf_smc.h">
+      <Filter>Formats\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_endianess.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="formats\smc\grf_smc_system.h">
+      <Filter>Formats\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\gru_strutils.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\gru_lineparse.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Framework\grfw_basicapplication.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfwu_logging.cpp">
+      <Filter>Framework\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfwu_reporting_mb.cpp">
+      <Filter>Framework\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfwu_reporting_lmb.cpp">
+      <Filter>Framework\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfw_content.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfw_shared.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\gru_filesystem.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="gr_shared.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfwu_exception.cpp">
+      <Filter>Framework\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfw_config.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\grfw_directx12.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="gr_rgba.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Formats\SMC\grf_smc.cpp">
+      <Filter>Formats\SMC</Filter>
+    </ClCompile>
+    <ClCompile Include="gr_endianess.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\smc\grf_smc_system.cpp">
+      <Filter>Formats\SMC</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\gru_lineparse.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\gru_strutils.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
