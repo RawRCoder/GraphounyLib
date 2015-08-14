@@ -28,6 +28,9 @@
     <Filter Include="Formats\SMC">
       <UniqueIdentifier>{9eba15cb-5c71-43ac-a4cb-5be9711f4c9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Framework\Utils\Render">
+      <UniqueIdentifier>{132a651f-f8c2-437f-8ca3-e19ad520fad1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\grfw_basicapplication.h">
@@ -117,6 +120,21 @@
     <ClInclude Include="resource.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="Framework\Render\grfwr_vertex_types.h">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Render\grfwr_buffer_vertex.h">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx12.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Render\grfwr_pipeline.h">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Render\grfwr_blob.h">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Framework\grfw_basicapplication.cpp">
@@ -169,6 +187,15 @@
     </ClCompile>
     <ClCompile Include="utils\gru_strutils.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Render\grfwr_vertex.cpp">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Render\grfwr_pipeline.cpp">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Render\grfwr_blob.cpp">
+      <Filter>Framework\Utils\Render</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

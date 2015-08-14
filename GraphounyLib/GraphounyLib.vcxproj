@@ -87,6 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="d3dx12.h" />
     <ClInclude Include="Formats\SMC\grf_smc.h" />
     <ClInclude Include="formats\smc\grf_smc_system.h" />
     <ClInclude Include="Framework\grfwu_exception.h" />
@@ -98,6 +99,10 @@
     <ClInclude Include="Framework\grfw_keys.h" />
     <ClInclude Include="Framework\grfwu_logging.h" />
     <ClInclude Include="Framework\grfw_shared.h" />
+    <ClInclude Include="Framework\Render\grfwr_buffer_vertex.h" />
+    <ClInclude Include="Framework\Render\grfwr_pipeline.h" />
+    <ClInclude Include="Framework\Render\grfwr_blob.h" />
+    <ClInclude Include="Framework\Render\grfwr_vertex_types.h" />
     <ClInclude Include="gr_128.h" />
     <ClInclude Include="gr_endianess.h" />
     <ClInclude Include="gr_rgba.h" />
@@ -129,6 +134,9 @@
     <ClCompile Include="Framework\grfw_directx12.cpp" />
     <ClCompile Include="Framework\grfwu_exception.cpp" />
     <ClCompile Include="Framework\grfw_shared.cpp" />
+    <ClCompile Include="Framework\Render\grfwr_blob.cpp" />
+    <ClCompile Include="Framework\Render\grfwr_pipeline.cpp" />
+    <ClCompile Include="Framework\Render\grfwr_vertex.cpp" />
     <ClCompile Include="gr_endianess.cpp" />
     <ClCompile Include="gr_rgba.cpp" />
     <ClCompile Include="gr_shared.cpp" />

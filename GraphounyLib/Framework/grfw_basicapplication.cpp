@@ -6,6 +6,7 @@
 #include "grfwu_exception.h"
 #include <ctime>
 #include "..\resource.h"
+#include "Render/grfwr_pipeline.h"
 
 GRAPHOUNY_NAMESPACE_FRAMEWORK{
 	BasicApplication::~BasicApplication()
@@ -20,6 +21,17 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 			m_pLogger->Close();
 			delete m_pLogger;
 		}
+
+		// Delete pipelines
+		for (auto it = m_dictPipeLines.GetIterator(); !it.Finished();++it)
+		{
+			auto pipeline = it();
+			delete pipeline;
+		}
+
+		// Delete device
+		//if (m_pDevice)
+			//delete m_pDevice; // cause exceptions
 	}
 		
 
@@ -69,6 +81,8 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 			}
 		}
 
+		LogLn(L"[DBG]: Unloading content");
+		UnloadContent();
 		LogLn(L"[DBG]: Engine closed!");
 	}
 
@@ -179,7 +193,8 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 
 	std::wstring BasicApplication::GetConfigPath() const
 	{ return m_pContentManager->GetBasePath() / L"settings.cfg"; }
-	
+
+
 	void BasicApplication::UpdateMouseData(bool firstTime)
 	{
 		if (!firstTime)
@@ -202,6 +217,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 		m_MouseData.m_vCursorDelta = m_MouseData.m_vCursorPosPercents - m_MouseData.m_vCursorPrevPosPercents;
 	}
 
+
 	LRESULT BasicApplication::WindowProcessor(HWND hwnd, u32 message, WPARAM wParam, LPARAM lParam)
 	{
 		auto app = g_pGlobals->CurrentApp();
@@ -218,6 +234,13 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 			EndPaint(hwnd, &paintStruct);
 			GetWindowRect(hwnd, app->m_pWindowFullRect);
 			GetClientRect(hwnd, app->m_pWindowClientRect);
+
+			app->m_viewport.Width = app->GetWidthF();
+			app->m_viewport.Height = app->GetHeightF();
+			app->m_viewport.MaxDepth = 1.0f;
+
+			app->m_scissorRect.right = static_cast<i32>(app->GetWidth());
+			app->m_scissorRect.bottom = static_cast<i32>(app->GetHeight());
 			break;
 
 		case WM_DESTROY:

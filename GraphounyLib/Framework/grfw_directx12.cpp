@@ -1,11 +1,13 @@
 #include "grfw_shared.h"
 #include "grfw_basicapplication.h"
 #include <stdexcept>
+#include "../d3dx12.h"
 
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #include "grfwu_exception.h"
+#include "Render/grfwr_pipeline.h"
 using namespace std;
 
 GRAPHOUNY_NAMESPACE_FRAMEWORK {
@@ -89,13 +91,6 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 			, L"Failed to create swap chain for window");
 
 		ThrowOnFailed(
-			m_pDevice->CreateCommandList(
-				0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-				m_pCmdAlloc.Get(), nullptr,
-				IID_PPV_ARGS(m_pCmdList.ReleaseAndGetAddressOf()))
-			, L"Failed to create command list");
-
-		ThrowOnFailed(
 			m_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_pFence.ReleaseAndGetAddressOf()))
 			, L"Failed to create fence");
 
@@ -125,6 +120,67 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 			d.ptr += i * rtvStep;
 			m_pDevice->CreateRenderTargetView(m_pD3DBuffer[i].Get(), nullptr, d);
 		}
+
+		m_viewport.Width = GetWidthF();
+		m_viewport.Height = GetHeightF();
+		m_viewport.MaxDepth = 1.0f;
+
+		m_scissorRect.right = static_cast<i32>(GetWidth());
+		m_scissorRect.bottom = static_cast<i32>(GetHeight());
+
+		// Create an empty root signature.
+		{
+			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+			rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+			Microsoft::WRL::ComPtr<ID3DBlob> signature;
+			Microsoft::WRL::ComPtr<ID3DBlob> error;
+			ThrowOnFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error), 
+				L"Failed to serialize root signature");
+			ThrowOnFailed(m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature)), 
+				L"Failed to create root signature");
+		}
+	}
+	ID3D12GraphicsCommandList* BasicApplication::GetCommandList() const
+	{
+		if (m_pCurrentPipeLine)
+			return m_pCurrentPipeLine->GetGraphicsList();
+		return nullptr;
+	}
+
+	void BasicApplication::Clear()
+	{
+		GetCommandList()->ClearRenderTargetView(m_descHandleRtv, rgba_s::to_floats(m_clrBackGround), 0, nullptr);
+	}
+
+	void BasicApplication::CreatePipeLine(const std::wstring id, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, D3D12_COMMAND_LIST_TYPE tp)
+	{
+		auto ppl = new PipeLine(m_pDevice);
+		ppl->m_pAllocator = m_pCmdAlloc.Get();
+		ppl->Initialize(desc, tp);
+		m_dictPipeLines.Set(id, ppl);
+	}
+
+	void BasicApplication::SetPipeLine(PipeLine* pl)
+	{
+		m_pCurrentPipeLine = pl;
+	}
+
+	PipeLine* BasicApplication::GetPipeLine(std::wstring id)
+	{
+		PipeLine* ppl;
+		if (m_dictPipeLines.TryGet(id, &ppl))		
+			return ppl;		
+		return nullptr;
+	}
+
+	bool BasicApplication::SetPipeLine(const std::wstring id)
+	{
+		auto ppl = GetPipeLine(id);
+		if (!ppl)
+			return false;
+		m_pCurrentPipeLine = ppl;
+		return true;
 	}
 
 	void setResourceBarrier(ID3D12GraphicsCommandList* commandList,
@@ -146,36 +202,29 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 	{
 		// Get current RTV descriptor
 		auto descHandleRtvStep = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		D3D12_CPU_DESCRIPTOR_HANDLE descHandleRtv = m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart();
-		descHandleRtv.ptr += ((m_iFrameIndex) % BUFFER_COUNT) * descHandleRtvStep;
+		m_descHandleRtv = m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart();
+		m_descHandleRtv.ptr += ((m_iFrameIndex) % BUFFER_COUNT) * descHandleRtvStep;
 		// Get current swap chain
 		m_pCurrentBuffer = m_pD3DBuffer[(m_iFrameIndex) % BUFFER_COUNT].Get();
 
 		// Barrier Present -> RenderTarget
-		setResourceBarrier(m_pCmdList.Get(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		setResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-		// Viewport
-		D3D12_VIEWPORT viewport = {};
-		viewport.Width = GetWidthF();
-		viewport.Height = GetHeightF();
-		m_pCmdList->RSSetViewports(1, &viewport);
-
-		// Clear				
-		m_pCmdList->ClearRenderTargetView(descHandleRtv, rgba_s::to_floats(m_clrBackGround), 0, nullptr);
+		
 	}
 
 	void BasicApplication::Render_After()
 	{
 		// Barrier RenderTarget -> Present
-		setResourceBarrier(m_pCmdList.Get(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		setResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 		// Exec
-		ThrowOnFailed(m_pCmdList->Close(), L"Failed to execute command list");
-		ID3D12CommandList* const cmdList = m_pCmdList.Get();
+		m_pCurrentPipeLine->Close();
+		ID3D12CommandList* const cmdList = GetCommandList();
 		m_pCmdQueue->ExecuteCommandLists(1, &cmdList);
 
 		// Present
-		ThrowOnFailed(m_pSwapChain->Present(1, 0), L"");
+		ThrowOnFailed(m_pSwapChain->Present(1, 0), L"Failed to present a swap chain");
 
 		// Set queue flushed event
 		ThrowOnFailed(m_pFence->SetEventOnCompletion(m_iFrameIndex, m_hFenceEvent), L"");
@@ -183,12 +232,12 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		// Wait for queue flushed
 		// This code would occur CPU stall!
 		ThrowOnFailed(m_pCmdQueue->Signal(m_pFence.Get(), m_iFrameIndex), L"");
-		DWORD wait = WaitForSingleObject(m_hFenceEvent, 10000);
+		DWORD wait = WaitForSingleObject(m_hFenceEvent, INFINITE);
 		if (wait != WAIT_OBJECT_0)
-			throw runtime_error("Failed WaitForSingleObject().");
+			throw GrBasicException(L"Failed WaitForSingleObject().");
 
-		ThrowOnFailed(m_pCmdAlloc->Reset(), L"Failed to reset command allocator");
-		ThrowOnFailed(m_pCmdList->Reset(m_pCmdAlloc.Get(), nullptr), L"Failed to reset command list");
+		m_pCurrentPipeLine->Reset();
 		++m_iFrameIndex;
 	}
+
 } GRAPHOUNY_NAMESPACE_END

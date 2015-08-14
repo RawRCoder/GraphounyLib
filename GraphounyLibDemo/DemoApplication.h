@@ -1,6 +1,8 @@
 #pragma once
 #include <Framework/grfw_shared.h>
 #include <Framework/grfw_basicapplication.h>
+#include <Framework/Render/grfwr_buffer_vertex.h>
+#include <Framework/Render/grfwr_vertex_types.h>
 
 class DemoApplication : public Graphouny::Framework::BasicApplication
 {
@@ -16,5 +18,6 @@ public:
 	~DemoApplication();
 private:
 	std::wstring m_wsText = L"";
+	VertexBuffer<vertex_colored_s> m_bufTriangle;
 };
 

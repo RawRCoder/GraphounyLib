@@ -215,8 +215,8 @@ template <class T> static i32 Comparator(const T& a, const T& b) { return a-b; }
 #define SPECIAL_COMPARATOR(T) template <> static i32 Comparator<T>(const T& a, const T& b)
 
 SPECIAL_COMPARATOR(bool) { return a == b ? 0 : 1; }
-SPECIAL_COMPARATOR(std::string) { return !a.compare(b); }
-SPECIAL_COMPARATOR(std::wstring) { return !a.compare(b); }
+SPECIAL_COMPARATOR(std::string) { return a.compare(b); }
+SPECIAL_COMPARATOR(std::wstring) { return a.compare(b); }
 
 typedef Dictionary<std::string, pointer> NamedPointerDictionary;
 typedef Dictionary<std::wstring, pointer> WNamedPointerDictionary;

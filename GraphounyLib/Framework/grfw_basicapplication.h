@@ -10,6 +10,7 @@
 #include "grfwu_input.h"
 #include "..\gr_rgba.h"
 
+class PipeLine;
 GRAPHOUNY_NAMESPACE_FRAMEWORK {
 	class Logger;
 	class ContentManager;
@@ -42,6 +43,8 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		KeyValueManager m_Config;
 		rgba_s m_clrBackGround = RGBA_GREEN;
 	protected:
+		inline ContentManager* GetContent() const { return m_pContentManager; }
+
 		virtual void Initialize() {  }
 		virtual void LoadContent() {  }
 		virtual void UnloadContent() {  }
@@ -65,6 +68,19 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		virtual ContentManager* InitContentManager();
 		virtual std::wstring GetLogFileName() const;
 		virtual std::wstring GetConfigPath() const;
+
+		ID3D12GraphicsCommandList* GetCommandList() const;
+		inline ID3D12RootSignature* GetRootSignature() const { return m_pRootSignature.Get(); }
+		inline const D3D12_VIEWPORT& GetViewPort() const { return m_viewport; }
+		inline const D3D12_RECT& GetScissorRect() const { return m_scissorRect; }
+		void Clear();
+
+		void CreatePipeLine(const std::wstring id, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, D3D12_COMMAND_LIST_TYPE tp = D3D12_COMMAND_LIST_TYPE_DIRECT);
+		void SetPipeLine(PipeLine* pl);
+		bool SetPipeLine(const std::wstring id);
+		PipeLine* GetPipeLine(std::wstring id);
+
+		Dictionary<std::wstring, PipeLine*> m_dictPipeLines{ Comparator<std::wstring> };
 	private:
 		LRESULT static CALLBACK WindowProcessor(HWND hwnd, u32 message, WPARAM wParam, LPARAM lParam);
 		void Init_PreInit();
@@ -88,10 +104,14 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		Microsoft::WRL::ComPtr<ID3D12Resource> m_pD3DBuffer[2];
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_pCmdAlloc;
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_pCmdQueue;
-		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_pCmdList;
 		Microsoft::WRL::ComPtr<ID3D12Fence> m_pFence;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_pDescHeapRtv;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_pDescHeapCbvSrvUAV;
+
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_pRootSignature;
+		PipeLine* m_pCurrentPipeLine = nullptr;
+		D3D12_VIEWPORT m_viewport;
+		D3D12_RECT m_scissorRect;
 
 		HANDLE m_hFenceEvent = nullptr;
 		bool m_bWindowIsCreated = false;
@@ -104,6 +124,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		u32 m_iFrameIndex = 0;
 
 		ID3D12Resource* m_pCurrentBuffer;
+		D3D12_CPU_DESCRIPTOR_HANDLE m_descHandleRtv;
 	};
 } GRAPHOUNY_NAMESPACE_END
 
