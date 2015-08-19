@@ -47,13 +47,20 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 
 			Initialize();
 			LoadContent();
+
+			if (!m_bCommandsClosed)
+			{
+				if (GetCommandList())
+					GetCommandList()->Close();
+			}
 		}
 		catch (GrBasicException ex)
 		{
 			auto rep = g_pGlobals->CurrentReporter();
 			if (!rep) 
 				throw ex;
-			rep->ReportError(ex.ToString());
+			rep->ReportError(ex.ToString(), L"Initialization error");
+			return;
 		}		
 
 		auto oClock = clock();
@@ -73,45 +80,15 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 				f32 delta = static_cast<f32>(clock() - oClock) / 1000.0f;
 				oClock = clock();
 
-				Update(delta);
+				OnUpdate(delta);
 				m_timeLastUpdate = time(nullptr);
-				Render_Before();
 				Render(delta);
-				Render_After();
 			}
 		}
 
 		LogLn(L"[DBG]: Unloading content");
 		UnloadContent();
 		LogLn(L"[DBG]: Engine closed!");
-	}
-
-	void BasicApplication::SetIcon(std::wstring path)
-	{
-		auto hIcon = LoadImage(m_hWindowsInstance, path.data(), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-		if (hIcon) {
-			//Change both icons to the same icon handle.
-			SendMessage(m_hWindowHandle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-			SendMessage(m_hWindowHandle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-
-			//This will ensure that the application icon gets changed too.
-			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-		}
-	}
-
-	void BasicApplication::SetIcon(i32 IDI)
-	{
-		auto hIcon = LoadIcon(m_hWindowsInstance, MAKEINTRESOURCE(IDI));
-		if (hIcon) {
-			//Change both icons to the same icon handle.
-			SendMessage(m_hWindowHandle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-			SendMessage(m_hWindowHandle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-
-			//This will ensure that the application icon gets changed too.
-			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-		}
 	}
 
 	void BasicApplication::Init_PreInit()
@@ -188,6 +165,34 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 		return pContent;
 	}
 
+	void BasicApplication::SetIcon(std::wstring path)
+	{
+		auto hIcon = LoadImage(m_hWindowsInstance, path.data(), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		if (hIcon) {
+			//Change both icons to the same icon handle.
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+
+			//This will ensure that the application icon gets changed too.
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+		}
+	}
+
+	void BasicApplication::SetIcon(i32 IDI)
+	{
+		auto hIcon = LoadIcon(m_hWindowsInstance, MAKEINTRESOURCE(IDI));
+		if (hIcon) {
+			//Change both icons to the same icon handle.
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(m_hWindowHandle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+
+			//This will ensure that the application icon gets changed too.
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessage(GetWindow(m_hWindowHandle, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+		}
+	}
+
 	std::wstring BasicApplication::GetLogFileName() const
 	{ return L"grlog_" + FormLogNumber() + L".log"; }
 
@@ -217,6 +222,10 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 		m_MouseData.m_vCursorDelta = m_MouseData.m_vCursorPosPercents - m_MouseData.m_vCursorPrevPosPercents;
 	}
 
+	TextureBuilder* BasicApplication::CreateTextureBuilder() const
+	{
+		return new TextureBuilder(m_pDevice, m_pDescHeapCbvSrvUAV.Get(), GetCommandList());
+	}
 
 	LRESULT BasicApplication::WindowProcessor(HWND hwnd, u32 message, WPARAM wParam, LPARAM lParam)
 	{
@@ -235,12 +244,12 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 			GetWindowRect(hwnd, app->m_pWindowFullRect);
 			GetClientRect(hwnd, app->m_pWindowClientRect);
 
-			app->m_viewport.Width = app->GetWidthF();
+			/*app->m_viewport.Width = app->GetWidthF();
 			app->m_viewport.Height = app->GetHeightF();
 			app->m_viewport.MaxDepth = 1.0f;
 
 			app->m_scissorRect.right = static_cast<i32>(app->GetWidth());
-			app->m_scissorRect.bottom = static_cast<i32>(app->GetHeight());
+			app->m_scissorRect.bottom = static_cast<i32>(app->GetHeight());*/
 			break;
 
 		case WM_DESTROY:

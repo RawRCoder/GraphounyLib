@@ -5,7 +5,7 @@
 #include "grfw_basicapplication.h"
 #pragma comment(lib, "comsuppw.lib")
 #pragma comment(lib, "d3d12.lib")
-//#pragma comment(lib, "dxerr.lib")
+#pragma comment( lib, "dxguid.lib")
 
 GRAPHOUNY_NAMESPACE_FRAMEWORK{
 
@@ -54,5 +54,12 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 		_com_error err(hr);
 		ReportError(title, msg + L" " + err.ErrorMessage());
 	}
+
+	void SetDebugObjectName(ID3D12DeviceChild* obj, const std::string& name)
+	{
+		u32 l = name.length();
+		obj->SetPrivateData(WKPDID_D3DDebugObjectName, l, name.data());
+	}
+
 	Globals* g_pGlobals = new Globals();
 } GRAPHOUNY_NAMESPACE_END

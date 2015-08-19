@@ -38,6 +38,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 		inline std::wstring GetBinPath() const { return m_wsBinaryDirectory; }
 		virtual std::wstring GetPath_LogsDir() const { return m_wsBaseDirectory / L"logs"; }
 		virtual std::wstring GetPath_ShadersDir() const { return m_wsBaseDirectory / L"shaders"; }
+		virtual std::wstring GetPath_TexturesDir() const { return m_wsBaseDirectory / L"textures"; }
 		virtual std::wstring GetPath_3dDir() const { return m_wsBaseDirectory / L"3d"; }
 
 		bool FileExists(std::wstring fileName);

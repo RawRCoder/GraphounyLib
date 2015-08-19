@@ -120,8 +120,17 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		ThrowOnFailed(
 			m_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_pDescHeapRtv.ReleaseAndGetAddressOf()))
-			, L"Failed to create descriptor heap");
+			, L"Failed to create RTV descriptor heap");
 		m_iRTVDescSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+		// Describe and create a shader resource view (SRV) heap for the texture.
+		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+		srvHeapDesc.NumDescriptors = 1;
+		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		ThrowOnFailed(
+			m_pDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_pDescHeapCbvSrvUAV)), 
+			L"Failed to create CBV/SRV/UAV descriptor heap");
 
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart());
@@ -142,18 +151,29 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		// Create an empty root signature.
 		{
 			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-			Microsoft::WRL::ComPtr<ID3DBlob> signature;
-			Microsoft::WRL::ComPtr<ID3DBlob> error;
-			ThrowOnFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error), 
-				L"Failed to serialize root signature");
-			ThrowOnFailed(m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature)), 
-				L"Failed to create root signature");
+			OnInitRootSignature(rootSignatureDesc);
 		}
 
 		m_iFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
 	}
+
+	void BasicApplication::OnInitRootSignature(CD3DX12_ROOT_SIGNATURE_DESC& rsdesc)
+	{
+		rsdesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+		CreateRootSignature(rsdesc);
+	}
+
+	void BasicApplication::CreateRootSignature(CD3DX12_ROOT_SIGNATURE_DESC& rsdesc)
+	{
+		Microsoft::WRL::ComPtr<ID3DBlob> signature;
+		Microsoft::WRL::ComPtr<ID3DBlob> error;
+		ThrowOnFailed(D3D12SerializeRootSignature(&rsdesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
+			L"Failed to serialize root signature");
+		ThrowOnFailed(m_pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_pRootSignature)),
+			L"Failed to create root signature");
+	}
+
 	ID3D12GraphicsCommandList* BasicApplication::GetCommandList() const
 	{
 		if (m_pCurrentPipeLine)
@@ -211,39 +231,75 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		desc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		commandList->ResourceBarrier(1, &desc);
 	}
-
-	void BasicApplication::Render_Before()
+	
+	void BasicApplication::Render(f32 delta)
 	{
-		m_pCurrentPipeLine->Reset();
+		m_iFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
+		auto ppl = m_pCurrentPipeLine;
+		auto cmd = GetCommandList();
+
+		ppl->Reset();
 		m_pCurrentBuffer = m_pD3DBuffer[m_iFrameIndex % BUFFER_COUNT].Get();
-		// Barrier Present -> RenderTarget
-		SetResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		cmd->SetGraphicsRootSignature(m_pRootSignature.Get());
+		ID3D12DescriptorHeap* ppHeaps[] = { m_pDescHeapCbvSrvUAV.Get() };
+		cmd->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		cmd->SetGraphicsRootDescriptorTable(0, m_pDescHeapCbvSrvUAV->GetGPUDescriptorHandleForHeapStart());
+		cmd->RSSetViewports(1, &GetViewPort());
+		cmd->RSSetScissorRects(1, &GetScissorRect());
+
+		SetResourceBarrier(cmd, m_pCurrentBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_pDescHeapRtv->GetCPUDescriptorHandleForHeapStart(), m_iFrameIndex % BUFFER_COUNT, m_iRTVDescSize);
-		GetCommandList()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-	}
+		cmd->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+		OnRender(delta);
+		SetResourceBarrier(cmd, m_pCurrentBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
-	void BasicApplication::Render_After()
-	{
-		// Barrier RenderTarget -> Present
-		SetResourceBarrier(GetCommandList(), m_pCurrentBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		ppl->Close();
 
-		// Exec
-		m_pCurrentPipeLine->Close();
-		ID3D12CommandList* const cmdList = GetCommandList();
-		m_pCmdQueue->ExecuteCommandLists(1, &cmdList);
+		// Execute the command list.
+		m_pCurRunningCommandList = cmd;
+		m_pCmdQueue->ExecuteCommandLists(1, &m_pCurRunningCommandList);
 
 		// Present
 		ThrowOnFailed(m_pSwapChain->Present(1, 0), L"Failed to present a swap chain");
 
-		// Set queue flushed event
-		ThrowOnFailed(m_pCmdQueue->Signal(m_pFence.Get(), m_iFrameIndex), L"");
-		// Wait until the previous frame is finished.
-		if (m_pFence->GetCompletedValue() < m_iFrameIndex)
-		{
-			ThrowOnFailed(m_pFence->SetEventOnCompletion(m_iFrameIndex, m_hFenceEvent), L"Faile to wait");
-			WaitForSingleObject(m_hFenceEvent, INFINITE);
-		}
-		m_iFrameIndex++;
+		WaitForGPU();
 	}
 
+	void BasicApplication::WaitForGPU()
+	{
+		const u64 fence = m_iFenceValue++;
+		ThrowOnFailed(m_pCmdQueue->Signal(m_pFence.Get(), fence), L"Failed to set queue flushed event");
+		if (m_pFence->GetCompletedValue() < fence)
+		{
+			ThrowOnFailed(m_pFence->SetEventOnCompletion(fence, m_hFenceEvent), L"Faile to wait");
+			WaitForSingleObject(m_hFenceEvent, INFINITE);
+		}
+		m_pCurRunningCommandList = nullptr;
+		m_iFrameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
+	}
+
+	void BasicApplication::StartCommands()
+	{ 
+		m_pCurrentPipeLine->Reset();
+		m_bCommandsClosed = false;
+	}
+
+	void BasicApplication::ResetCommands()
+	{
+		ThrowOnFailed(GetCommandList()->Reset(m_pCmdAlloc.Get(), m_pCurrentPipeLine->GeState()), L"Failed to reset command list");
+	}
+
+	void BasicApplication::EndCommands()
+	{
+		m_pCurrentPipeLine->Close();
+		m_bCommandsClosed = true;
+	}
+
+	void BasicApplication::ExecuteCommandsAndWait()
+	{
+		m_pCurRunningCommandList = GetCommandList();
+		m_pCmdQueue->ExecuteCommandLists(1, &m_pCurRunningCommandList);
+		WaitForGPU();
+	}
 } GRAPHOUNY_NAMESPACE_END

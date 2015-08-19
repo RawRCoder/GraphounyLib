@@ -31,6 +31,9 @@
     <Filter Include="Framework\Utils\Render">
       <UniqueIdentifier>{132a651f-f8c2-437f-8ca3-e19ad520fad1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Formats\DDS">
+      <UniqueIdentifier>{45efad34-f829-43e1-856c-a4f84f2c4391}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\grfw_basicapplication.h">
@@ -135,6 +138,21 @@
     <ClInclude Include="Framework\Render\grfwr_blob.h">
       <Filter>Framework\Utils\Render</Filter>
     </ClInclude>
+    <ClInclude Include="Formats\DDS\grf_dds.h">
+      <Filter>Formats\DDS</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Render\grfwr_texture_builder.h">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_memstream.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_stream.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="gr_fstream.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Framework\grfw_basicapplication.cpp">
@@ -196,6 +214,18 @@
     </ClCompile>
     <ClCompile Include="Framework\Render\grfwr_blob.cpp">
       <Filter>Framework\Utils\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Render\grfwr_texture_builder.cpp">
+      <Filter>Framework\Utils\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="gr_memstream.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="gr_fstream.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Formats\dds\grf_dds.cpp">
+      <Filter>Formats\DDS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

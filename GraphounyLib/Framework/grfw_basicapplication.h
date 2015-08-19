@@ -10,6 +10,7 @@
 #include "grfwu_input.h"
 #include "..\gr_rgba.h"
 #include "../d3dx12.h"
+#include "Render/grfwr_texture_builder.h"
 
 class PipeLine;
 GRAPHOUNY_NAMESPACE_FRAMEWORK {
@@ -50,8 +51,8 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		virtual void LoadContent() {  }
 		virtual void UnloadContent() {  }
 
-		virtual void Update(f32 delta) {}
-		virtual void Render(f32 delta) {}
+		virtual void OnUpdate(f32 delta) {}
+		virtual void OnRender(f32 delta) {}
 
 		virtual void OnChar(wchar_t c) {}
 		virtual void OnKeyPressed(KeyEventArgs args) {}
@@ -86,6 +87,17 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 			D3D12_RESOURCE_STATES after);
 
 		Dictionary<std::wstring, PipeLine*> m_dictPipeLines{ Comparator<std::wstring> };
+		TextureBuilder* CreateTextureBuilder() const;
+
+		virtual void OnInitRootSignature(CD3DX12_ROOT_SIGNATURE_DESC& rsdesc);
+		void CreateRootSignature(CD3DX12_ROOT_SIGNATURE_DESC& rsdesc);
+		void Render(f32 delta);
+		void WaitForGPU();
+
+		void StartCommands();
+		void ResetCommands();
+		void EndCommands();
+		void ExecuteCommandsAndWait();
 	private:
 		LRESULT static CALLBACK WindowProcessor(HWND hwnd, u32 message, WPARAM wParam, LPARAM lParam);
 		void Init_PreInit();
@@ -93,8 +105,6 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		void Init_CreateWindow(HINSTANCE hInst, i32 cmdShow, std::wstring title);
 		void Init_DirectX12();
 		void UpdateMouseData(bool firstTime = false);
-		void Render_Before();
-		void Render_After();
 
 		ContentManager* m_pContentManager;
 		Logger* m_pLogger = nullptr;
@@ -117,6 +127,7 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 		PipeLine* m_pCurrentPipeLine = nullptr;
 		D3D12_VIEWPORT m_viewport;
 		D3D12_RECT m_scissorRect;
+		u64 m_iFenceValue = 0;
 
 		HANDLE m_hFenceEvent = nullptr;
 		bool m_bWindowIsCreated = false;
@@ -131,6 +142,9 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK {
 
 		ID3D12Resource* m_pCurrentBuffer;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE m_rtvHandle;
+
+		ID3D12CommandList* m_pCurRunningCommandList = nullptr;
+		bool m_bCommandsClosed = false;
 	};
 } GRAPHOUNY_NAMESPACE_END
 

@@ -12,6 +12,11 @@ struct rgba_s
 	rgba_s(f32 _r, f32 _g, f32 _b, f32 _a) : r(_r), g(_g), b(_b), a(_a) { }
 
 	static const f32* to_floats(const rgba_s& a);
+	static rgba_s from_rgba_bytes(const u32 value);
+	u32 to_rgba_bytes() const;
+
+	f32 get_brightness() const;
+	u32 get_hue() const;
 };
 
 bool static operator ==(const rgba_s& a, const rgba_s& b);

@@ -45,4 +45,6 @@ GRAPHOUNY_NAMESPACE_FRAMEWORK{
 	extern inline void ReportError_HR(HRESULT hr, std::wstring msg);
 	extern inline void ReportError_HR(std::wstring title, HRESULT hr, std::wstring msg);
 
+	extern void SetDebugObjectName(ID3D12DeviceChild* obj, const std::string& name);
+
 } GRAPHOUNY_NAMESPACE_END

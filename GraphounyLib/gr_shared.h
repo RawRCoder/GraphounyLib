@@ -58,3 +58,5 @@ static u64 GetHashCode(const T& value)
 	std::hash<T> h;
 	return h(value);
 }
+
+#define M_OFFSET(addr, member) (((u64)&(addr->member)) - ((u64)addr))
